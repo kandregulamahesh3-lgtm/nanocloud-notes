@@ -4,16 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NanoCloud Notes — Hybrid AI Workspace</title>
-  <script type="importmap">
-    {
-      "imports": {
-        "firebase/app": "https://gstatic.com",
-        "firebase/analytics": "https://gstatic.com",
-        "firebase/app-check": "https://gstatic.com",
-        "firebase/ai": "https://gstatic.com"
-      }
-    }
-  </script>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body { margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
@@ -52,12 +42,14 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "firebase/app";
-    import { getAnalytics, logEvent, isSupported } from "firebase/analytics";
-    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
-    import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "firebase/ai";
+    const outputBox = document.getElementById("outputBox");
+    const modeBadge = document.getElementById("modeBadge");
+    const metaInfo = document.getElementById("metaInfo");
+    const noteInput = document.getElementById("noteInput");
+    const btnQuick = document.getElementById("btnQuick");
+    const btnDeep = document.getElementById("btnDeep");
 
-    // Enable App Check Debug Token for hackathon judging & testing
+    // Enable App Check Debug Token
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = "PASTE_YOUR_DEBUG_TOKEN_HERE";
 
     const firebaseConfig = {
@@ -70,43 +62,43 @@
       measurementId: "G-YYTGF9VCSR"
     };
 
-    const app = initializeApp(firebaseConfig);
-
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
-      isTokenAutoRefreshEnabled: true
-    });
-
-    let analytics = null;
-    isSupported().then((ok) => { if (ok) analytics = getAnalytics(app); });
-
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
-
-    const outputBox = document.getElementById("outputBox");
-    const modeBadge = document.getElementById("modeBadge");
-    const metaInfo = document.getElementById("metaInfo");
-    const noteInput = document.getElementById("noteInput");
-    const btnQuick = document.getElementById("btnQuick");
-    const btnDeep = document.getElementById("btnDeep");
+    let ai = null;
+    let getGenerativeModelFn = null;
 
     async function runHybridTask(taskType) {
       const text = noteInput.value.trim();
       if (!text) {
-        outputBox.textContent = "Please type or paste some notes first!";
+        outputBox.textContent = "Please paste your lecture notes into the box first!";
         return;
       }
 
       btnQuick.disabled = true;
       btnDeep.disabled = true;
-      outputBox.textContent = "Thinking with Firebase AI Logic...";
-
-      const startTime = performance.now();
-      const isLocalPreferred = taskType === "quick";
+      outputBox.textContent = "Connecting to Firebase AI Logic...";
 
       try {
-        const model = getGenerativeModel(ai, {
+        if (!ai) {
+          const appMod = await import("https://gstatic.com");
+          const checkMod = await import("https://gstatic.com");
+          const aiMod = await import("https://gstatic.com");
+
+          const app = appMod.initializeApp(firebaseConfig);
+          checkMod.initializeAppCheck(app, {
+            provider: new checkMod.ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
+            isTokenAutoRefreshEnabled: true
+          });
+
+          ai = aiMod.getAI(app, { backend: new aiMod.GoogleAIBackend() });
+          getGenerativeModelFn = aiMod.getGenerativeModel;
+        }
+
+        outputBox.textContent = "Generating response...";
+        const startTime = performance.now();
+        const isLocalPreferred = taskType === "quick";
+
+        const model = getGenerativeModelFn(ai, {
           model: "gemini-2.5-flash",
-          mode: isLocalPreferred ? InferenceMode.PREFER_ON_DEVICE : InferenceMode.PREFER_IN_CLOUD
+          mode: isLocalPreferred ? "prefer_on_device" : "prefer_in_cloud"
         });
 
         const prompt = isLocalPreferred
@@ -124,12 +116,8 @@
         modeBadge.className = isOnDevice ? "badge local" : "badge cloud";
         outputBox.textContent = responseText;
         metaInfo.textContent = `Source: ${source} • Latency: ${elapsed}s`;
-
-        if (analytics) {
-          logEvent(analytics, "hybrid_ai_run", { task: taskType, source });
-        }
       } catch (err) {
-        outputBox.textContent = "AI Error: " + err.message;
+        outputBox.textContent = "Error: " + err.message;
       } finally {
         btnQuick.disabled = false;
         btnDeep.disabled = false;
