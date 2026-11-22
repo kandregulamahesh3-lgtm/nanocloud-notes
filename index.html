@@ -15,8 +15,8 @@
     .badge.cloud { background: #1e3a8a; border-color: #3b82f6; color: #bfdbfe; }
     textarea { width: 100%; height: 180px; padding: 14px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #f8fafc; font-size: 1rem; resize: vertical; }
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
-    button { padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button { padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: 0.5; }
     .btn-local { background: #10b981; color: #022c22; }
     .btn-cloud { background: #3b82f6; color: #ffffff; }
     .output { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; min-height: 120px; white-space: pre-wrap; line-height: 1.5; }
@@ -27,7 +27,7 @@
   <div class="container">
     <header>
       <h1>NanoCloud Notes</h1>
-      <span id="modeBadge" class="badge">Hybrid AI Ready</span>
+      <span id="modeBadge" class="badge">Loading SDK...</span>
     </header>
 
     <textarea id="noteInput" placeholder="Paste your lecture notes, article, or meeting thoughts here..."></textarea>
@@ -42,12 +42,24 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://gstatic.com";
+    const outputBox = document.getElementById("outputBox");
+    const modeBadge = document.getElementById("modeBadge");
+    const metaInfo = document.getElementById("metaInfo");
+    const noteInput = document.getElementById("noteInput");
+    const btnQuick = document.getElementById("btnQuick");
+    const btnDeep = document.getElementById("btnDeep");
+
+    // Show any unexpected errors directly on screen
+    window.addEventListener("error", (e) => {
+      outputBox.textContent = "Script Error: " + e.message;
+    });
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
     import { getAnalytics, logEvent, isSupported } from "https://gstatic.com";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://gstatic.com";
-    import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "https://gstatic.com";
+    import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-ai.js";
 
-    // Enable App Check Debug Token for hackathon judging & testing
+    // Enable App Check Debug Token
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = "PASTE_YOUR_DEBUG_TOKEN_HERE";
 
     const firebaseConfig = {
@@ -60,44 +72,33 @@
       measurementId: "G-YYTGF9VCSR"
     };
 
-    const app = initializeApp(firebaseConfig);
-
-    // Initialize App Check
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
-      isTokenAutoRefreshEnabled: true
-    });
-
-    // Initialize Analytics safely
+    let ai = null;
     let analytics = null;
-    isSupported().then((ok) => { if (ok) analytics = getAnalytics(app); });
 
-    // Initialize Firebase AI Logic (Gemini Developer API Backend)
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
+    try {
+      const app = initializeApp(firebaseConfig);
 
-    // Hybrid Model 1: Prefers on-device Gemini Nano, automatically falls back to cloud
-    const hybridLocalFirstModel = getGenerativeModel(ai, {
-      model: "gemini-2.5-flash",
-      mode: InferenceMode.PREFER_ON_DEVICE
-    });
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
+        isTokenAutoRefreshEnabled: true
+      });
 
-    // Hybrid Model 2: Prefers cloud for heavy multi-step synthesis
-    const hybridCloudModel = getGenerativeModel(ai, {
-      model: "gemini-2.5-flash",
-      mode: InferenceMode.PREFER_IN_CLOUD
-    });
-
-    const noteInput = document.getElementById("noteInput");
-    const outputBox = document.getElementById("outputBox");
-    const modeBadge = document.getElementById("modeBadge");
-    const metaInfo = document.getElementById("metaInfo");
-    const btnQuick = document.getElementById("btnQuick");
-    const btnDeep = document.getElementById("btnDeep");
+      isSupported().then((ok) => { if (ok) analytics = getAnalytics(app); });
+      ai = getAI(app, { backend: new GoogleAIBackend() });
+      modeBadge.textContent = "Hybrid AI Ready";
+    } catch (initErr) {
+      modeBadge.textContent = "Setup Error";
+      outputBox.textContent = "Initialization Error: " + initErr.message;
+    }
 
     async function runHybridTask(taskType) {
       const text = noteInput.value.trim();
       if (!text) {
         outputBox.textContent = "Please type or paste some notes first!";
+        return;
+      }
+      if (!ai) {
+        outputBox.textContent = "Firebase AI is still initializing or hit a setup error above.";
         return;
       }
 
@@ -107,12 +108,16 @@
 
       const startTime = performance.now();
       const isLocalPreferred = taskType === "quick";
-      const model = isLocalPreferred ? hybridLocalFirstModel : hybridCloudModel;
-      const prompt = isLocalPreferred
-        ? `Summarize these notes into 3 crisp bullet points and extract 3 key terms:\n\n${text}`
-        : `Create a structured study guide with core concepts and 3 practice quiz questions with answers from these notes:\n\n${text}`;
 
       try {
+        const model = getGenerativeModel(ai, {
+          mode: isLocalPreferred ? InferenceMode.PREFER_ON_DEVICE : InferenceMode.PREFER_IN_CLOUD
+        });
+
+        const prompt = isLocalPreferred
+          ? `Summarize these notes into 3 crisp bullet points and extract 3 key terms:\n\n${text}`
+          : `Create a structured study guide with core concepts and 3 practice quiz questions with answers from these notes:\n\n${text}`;
+
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
@@ -120,7 +125,7 @@
         const source = result.response.inferenceSource || (isLocalPreferred ? "ON_DEVICE / HYBRID" : "IN_CLOUD");
         const isOnDevice = String(source).toUpperCase().includes("DEVICE");
 
-        modeBadge.textContent = isOnDevice ? "⚡ Executed On-Device (Gemini Nano)" : "☁️ Executed via Cloud Fallback";
+        modeBadge.textContent = isOnDevice ? "⚡ On-Device (Gemini Nano)" : "☁️ Cloud Fallback";
         modeBadge.className = isOnDevice ? "badge local" : "badge cloud";
         outputBox.textContent = responseText;
         metaInfo.textContent = `Source: ${source} • Latency: ${elapsed}s`;
@@ -129,7 +134,7 @@
           logEvent(analytics, "hybrid_ai_run", { task: taskType, source });
         }
       } catch (err) {
-        outputBox.textContent = `Error: ${err.message}\n\nTip: Make sure your App Check debug token is pasted into index.html.`;
+        outputBox.textContent = "AI Error: " + err.message;
       } finally {
         btnQuick.disabled = false;
         btnDeep.disabled = false;
