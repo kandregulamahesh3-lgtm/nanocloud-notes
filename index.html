@@ -62,6 +62,7 @@
       measurementId: "G-YYTGF9VCSR"
     };
 
+    const cdnBase = "https://" + ["www", "gstatic", "com"].join(".") + "/firebasejs/13.4.0/";
     let ai = null;
     let getGenerativeModelFn = null;
 
@@ -78,9 +79,9 @@
 
       try {
         if (!ai) {
-          const appMod = await import("https://gstatic.com");
-          const checkMod = await import("https://gstatic.com");
-          const aiMod = await import("https://gstatic.com");
+          const appMod = await import(cdnBase + "firebase-app.js");
+          const checkMod = await import(cdnBase + "firebase-app-check.js");
+          const aiMod = await import(cdnBase + "firebase-ai.js");
 
           const app = appMod.initializeApp(firebaseConfig);
           checkMod.initializeAppCheck(app, {
