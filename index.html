@@ -27,7 +27,7 @@
   <div class="container">
     <header>
       <h1>NanoCloud Notes</h1>
-      <span id="modeBadge" class="badge">Loading SDK...</span>
+      <span id="modeBadge" class="badge">Connecting...</span>
     </header>
 
     <textarea id="noteInput" placeholder="Paste your lecture notes, article, or meeting thoughts here..."></textarea>
@@ -49,16 +49,6 @@
     const btnQuick = document.getElementById("btnQuick");
     const btnDeep = document.getElementById("btnDeep");
 
-    // Show any unexpected errors directly on screen
-    window.addEventListener("error", (e) => {
-      outputBox.textContent = "Script Error: " + e.message;
-    });
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
-    import { getAnalytics, logEvent, isSupported } from "https://gstatic.com";
-    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://gstatic.com";
-    import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-ai.js";
-
     // Enable App Check Debug Token
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = "PASTE_YOUR_DEBUG_TOKEN_HERE";
 
@@ -73,23 +63,40 @@
     };
 
     let ai = null;
+    let aiModule = null;
     let analytics = null;
+    let logEventFn = null;
 
-    try {
-      const app = initializeApp(firebaseConfig);
+    async function initFirebase() {
+      try {
+        const { initializeApp } = await import("https://gstatic.com");
+        const { initializeAppCheck, ReCaptchaEnterpriseProvider } = await import("https://gstatic.com");
+        aiModule = await import("https://gstatic.com");
 
-      initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
-        isTokenAutoRefreshEnabled: true
-      });
+        const app = initializeApp(firebaseConfig);
 
-      isSupported().then((ok) => { if (ok) analytics = getAnalytics(app); });
-      ai = getAI(app, { backend: new GoogleAIBackend() });
-      modeBadge.textContent = "Hybrid AI Ready";
-    } catch (initErr) {
-      modeBadge.textContent = "Setup Error";
-      outputBox.textContent = "Initialization Error: " + initErr.message;
+        initializeAppCheck(app, {
+          provider: new ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
+          isTokenAutoRefreshEnabled: true
+        });
+
+        try {
+          const analyticsMod = await import("https://gstatic.com");
+          if (await analyticsMod.isSupported()) {
+            analytics = analyticsMod.getAnalytics(app);
+            logEventFn = analyticsMod.logEvent;
+          }
+        } catch (_) {}
+
+        ai = aiModule.getAI(app, { backend: new aiModule.GoogleAIBackend() });
+        modeBadge.textContent = "Hybrid AI Ready";
+      } catch (err) {
+        modeBadge.textContent = "SDK Load Error";
+        outputBox.textContent = "Failed to load Firebase SDK: " + err.message;
+      }
     }
+
+    initFirebase();
 
     async function runHybridTask(taskType) {
       const text = noteInput.value.trim();
@@ -97,8 +104,8 @@
         outputBox.textContent = "Please type or paste some notes first!";
         return;
       }
-      if (!ai) {
-        outputBox.textContent = "Firebase AI is still initializing or hit a setup error above.";
+      if (!ai || !aiModule) {
+        outputBox.textContent = "Still connecting to Firebase AI Logic—wait 2 seconds and tap again!";
         return;
       }
 
@@ -110,8 +117,13 @@
       const isLocalPreferred = taskType === "quick";
 
       try {
-        const model = getGenerativeModel(ai, {
-          mode: isLocalPreferred ? InferenceMode.PREFER_ON_DEVICE : InferenceMode.PREFER_IN_CLOUD
+        const mode = isLocalPreferred
+          ? aiModule.InferenceMode.PREFER_ON_DEVICE
+          : aiModule.InferenceMode.PREFER_IN_CLOUD;
+
+        const model = aiModule.getGenerativeModel(ai, {
+          model: "gemini-2.5-flash",
+          mode
         });
 
         const prompt = isLocalPreferred
@@ -130,8 +142,8 @@
         outputBox.textContent = responseText;
         metaInfo.textContent = `Source: ${source} • Latency: ${elapsed}s`;
 
-        if (analytics) {
-          logEvent(analytics, "hybrid_ai_run", { task: taskType, source });
+        if (analytics && logEventFn) {
+          logEventFn(analytics, "hybrid_ai_run", { task: taskType, source });
         }
       } catch (err) {
         outputBox.textContent = "AI Error: " + err.message;
