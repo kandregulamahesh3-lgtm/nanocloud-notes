@@ -92,7 +92,7 @@
         modeBadge.textContent = "Hybrid AI Ready";
       } catch (err) {
         modeBadge.textContent = "SDK Load Error";
-        outputBox.textContent = "Failed to load Firebase SDK: " + err.message;
+        outputBox.textContent = "Error details: " + err.message;
       }
     }
 
@@ -117,13 +117,9 @@
       const isLocalPreferred = taskType === "quick";
 
       try {
-        const mode = isLocalPreferred
-          ? aiModule.InferenceMode.PREFER_ON_DEVICE
-          : aiModule.InferenceMode.PREFER_IN_CLOUD;
-
         const model = aiModule.getGenerativeModel(ai, {
           model: "gemini-2.5-flash",
-          mode
+          mode: isLocalPreferred ? "prefer_on_device" : "prefer_in_cloud"
         });
 
         const prompt = isLocalPreferred
