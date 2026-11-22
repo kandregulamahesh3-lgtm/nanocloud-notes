@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NanoCloud Notes — Hybrid AI Workspace</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://gstatic.com",
+        "firebase/analytics": "https://gstatic.com",
+        "firebase/app-check": "https://gstatic.com",
+        "firebase/ai": "https://gstatic.com"
+      }
+    }
+  </script>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body { margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; }
@@ -27,7 +37,7 @@
   <div class="container">
     <header>
       <h1>NanoCloud Notes</h1>
-      <span id="modeBadge" class="badge">Connecting...</span>
+      <span id="modeBadge" class="badge">Hybrid AI Ready</span>
     </header>
 
     <textarea id="noteInput" placeholder="Paste your lecture notes, article, or meeting thoughts here..."></textarea>
@@ -42,14 +52,12 @@
   </div>
 
   <script type="module">
-    const outputBox = document.getElementById("outputBox");
-    const modeBadge = document.getElementById("modeBadge");
-    const metaInfo = document.getElementById("metaInfo");
-    const noteInput = document.getElementById("noteInput");
-    const btnQuick = document.getElementById("btnQuick");
-    const btnDeep = document.getElementById("btnDeep");
+    import { initializeApp } from "firebase/app";
+    import { getAnalytics, logEvent, isSupported } from "firebase/analytics";
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+    import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } from "firebase/ai";
 
-    // Enable App Check Debug Token
+    // Enable App Check Debug Token for hackathon judging & testing
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = "PASTE_YOUR_DEBUG_TOKEN_HERE";
 
     const firebaseConfig = {
@@ -62,50 +70,29 @@
       measurementId: "G-YYTGF9VCSR"
     };
 
-    let ai = null;
-    let aiModule = null;
+    const app = initializeApp(firebaseConfig);
+
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
+      isTokenAutoRefreshEnabled: true
+    });
+
     let analytics = null;
-    let logEventFn = null;
+    isSupported().then((ok) => { if (ok) analytics = getAnalytics(app); });
 
-    async function initFirebase() {
-      try {
-        const { initializeApp } = await import("https://gstatic.com");
-        const { initializeAppCheck, ReCaptchaEnterpriseProvider } = await import("https://gstatic.com");
-        aiModule = await import("https://gstatic.com");
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
 
-        const app = initializeApp(firebaseConfig);
-
-        initializeAppCheck(app, {
-          provider: new ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
-          isTokenAutoRefreshEnabled: true
-        });
-
-        try {
-          const analyticsMod = await import("https://gstatic.com");
-          if (await analyticsMod.isSupported()) {
-            analytics = analyticsMod.getAnalytics(app);
-            logEventFn = analyticsMod.logEvent;
-          }
-        } catch (_) {}
-
-        ai = aiModule.getAI(app, { backend: new aiModule.GoogleAIBackend() });
-        modeBadge.textContent = "Hybrid AI Ready";
-      } catch (err) {
-        modeBadge.textContent = "SDK Load Error";
-        outputBox.textContent = "Error details: " + err.message;
-      }
-    }
-
-    initFirebase();
+    const outputBox = document.getElementById("outputBox");
+    const modeBadge = document.getElementById("modeBadge");
+    const metaInfo = document.getElementById("metaInfo");
+    const noteInput = document.getElementById("noteInput");
+    const btnQuick = document.getElementById("btnQuick");
+    const btnDeep = document.getElementById("btnDeep");
 
     async function runHybridTask(taskType) {
       const text = noteInput.value.trim();
       if (!text) {
         outputBox.textContent = "Please type or paste some notes first!";
-        return;
-      }
-      if (!ai || !aiModule) {
-        outputBox.textContent = "Still connecting to Firebase AI Logic—wait 2 seconds and tap again!";
         return;
       }
 
@@ -117,9 +104,9 @@
       const isLocalPreferred = taskType === "quick";
 
       try {
-        const model = aiModule.getGenerativeModel(ai, {
+        const model = getGenerativeModel(ai, {
           model: "gemini-2.5-flash",
-          mode: isLocalPreferred ? "prefer_on_device" : "prefer_in_cloud"
+          mode: isLocalPreferred ? InferenceMode.PREFER_ON_DEVICE : InferenceMode.PREFER_IN_CLOUD
         });
 
         const prompt = isLocalPreferred
@@ -138,8 +125,8 @@
         outputBox.textContent = responseText;
         metaInfo.textContent = `Source: ${source} • Latency: ${elapsed}s`;
 
-        if (analytics && logEventFn) {
-          logEventFn(analytics, "hybrid_ai_run", { task: taskType, source });
+        if (analytics) {
+          logEvent(analytics, "hybrid_ai_run", { task: taskType, source });
         }
       } catch (err) {
         outputBox.textContent = "AI Error: " + err.message;
