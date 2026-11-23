@@ -18,12 +18,12 @@
     .badge.online { background: #0f291e; border-color: #22c55e; color: #86efac; }
     .badge.offline { background: #451a03; border-color: #f59e0b; color: #fde68a; }
     .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
-    .btn-ghost { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+    .btn-ghost { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
     .char-count { font-size: 0.78rem; color: #94a3b8; }
     textarea { width: 100%; height: 165px; padding: 14px; border-radius: 12px; border: 1px solid #334155; background: #111827; color: #f8fafc; font-size: 0.98rem; resize: vertical; line-height: 1.5; }
     .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
     @media (max-width: 540px) { .actions { grid-template-columns: 1fr; } }
-    button.main-btn { padding: 12px 10px; border: none; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+    button.main-btn { padding: 12px 10px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
     button.main-btn:disabled { opacity: 0.5; }
     .btn-auto { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; }
     .btn-local { background: #10b981; color: #022c22; }
@@ -87,26 +87,26 @@
   </div>
 
   <script type="module">
-    const NL = String.fromCharCode(10);
-    const outputBox = document.getElementById("outputBox");
-    const modeBadge = document.getElementById("modeBadge");
-    const netBadge = document.getElementById("netBadge");
-    const metaInfo = document.getElementById("metaInfo");
-    const routeReason = document.getElementById("routeReason");
-    const noteInput = document.getElementById("noteInput");
-    const charCount = document.getElementById("charCount");
-    const historyList = document.getElementById("historyList");
+    var NL = String.fromCharCode(10);
+    var outputBox = document.getElementById("outputBox");
+    var modeBadge = document.getElementById("modeBadge");
+    var netBadge = document.getElementById("netBadge");
+    var metaInfo = document.getElementById("metaInfo");
+    var routeReason = document.getElementById("routeReason");
+    var noteInput = document.getElementById("noteInput");
+    var charCount = document.getElementById("charCount");
+    var historyList = document.getElementById("historyList");
 
-    const btnAuto = document.getElementById("btnAuto");
-    const btnQuick = document.getElementById("btnQuick");
-    const btnDeep = document.getElementById("btnDeep");
-    const btnSample = document.getElementById("btnSample");
-    const btnCopy = document.getElementById("btnCopy");
-    const btnClearHistory = document.getElementById("btnClearHistory");
+    var btnAuto = document.getElementById("btnAuto");
+    var btnQuick = document.getElementById("btnQuick");
+    var btnDeep = document.getElementById("btnDeep");
+    var btnSample = document.getElementById("btnSample");
+    var btnCopy = document.getElementById("btnCopy");
+    var btnClearHistory = document.getElementById("btnClearHistory");
 
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = "2ED8D27A-02E8-4050-A774-BBF0F2D55AA2";
 
-    const firebaseConfig = {
+    var firebaseConfig = {
       apiKey: "AIzaSyAh6nklRujVWgXgaKjaHWLBPju8481E9So",
       authDomain: "://firebaseapp.com",
       projectId: "nanocloud-notes",
@@ -116,7 +116,7 @@
       measurementId: "G-YYTGF9VCSR"
     };
 
-    const SAMPLE_LECTURE = "Cellular Respiration & ATP Production" + NL + "Cellular respiration is the metabolic pathway that breaks down glucose to produce adenosine triphosphate (ATP), the primary energy currency of cells. It occurs in three main stages: glycolysis in the cytoplasm, the Krebs cycle (citric acid cycle) in the mitochondrial matrix, and oxidative phosphorylation along the inner mitochondrial membrane. While glycolysis can occur anaerobically and yields a net gain of 2 ATP molecules, the presence of oxygen allows eukaryotic cells to complete aerobic respiration, generating approximately 30 to 32 ATP molecules per glucose molecule. Oxygen acts as the final electron acceptor in the electron transport chain, combining with hydrogen ions to form water as a byproduct.";
+    var SAMPLE_LECTURE = "Cellular Respiration & ATP Production" + NL + "Cellular respiration is the metabolic pathway that breaks down glucose to produce adenosine triphosphate (ATP), the primary energy currency of cells. It occurs in three main stages: glycolysis in the cytoplasm, the Krebs cycle (citric acid cycle) in the mitochondrial matrix, and oxidative phosphorylation along the inner mitochondrial membrane. While glycolysis can occur anaerobically and yields a net gain of 2 ATP molecules, the presence of oxygen allows eukaryotic cells to complete aerobic respiration, generating approximately 30 to 32 ATP molecules per glucose molecule. Oxygen acts as the final electron acceptor in the electron transport chain, combining with hydrogen ions to form water as a byproduct.";
 
     function updateNetworkUI() {
       if (navigator.onLine) {
@@ -132,35 +132,35 @@
     updateNetworkUI();
 
     function updateCharHint() {
-      const len = noteInput.value.trim().length;
-      let target = "Auto-routes short notes locally";
-      if (len > 0) {
-        target = len < 350 ? "Short note → Auto-routes On-Device" : "Dense note → Auto-routes Cloud";
+      var len = noteInput.value.trim().length;
+      var target = "Auto-routes short notes locally";
+      if (Boolean(len)) {
+        target = Math.floor(len / 350) === 0 ? "Short note • Auto-routes On-Device" : "Dense note • Auto-routes Cloud";
       }
       charCount.textContent = len + " chars • " + target;
     }
     noteInput.addEventListener("input", updateCharHint);
 
-    btnSample.addEventListener("click", () => {
+    btnSample.addEventListener("click", function() {
       noteInput.value = SAMPLE_LECTURE;
       updateCharHint();
     });
 
-    btnCopy.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(outputBox.textContent);
+    btnCopy.addEventListener("click", function() {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(outputBox.textContent);
         btnCopy.textContent = "Copied!";
-        setTimeout(() => { btnCopy.textContent = "Copy Result"; }, 1500);
-      } catch (_) {}
+        setTimeout(function() { btnCopy.textContent = "Copy Result"; }, 1500);
+      }
     });
 
     function renderHistory() {
       historyList.textContent = "";
-      const saved = JSON.parse(localStorage.getItem("nanocloud_vault") || "[]");
+      var saved = JSON.parse(localStorage.getItem("nanocloud_vault") || "[]");
       if (saved.length === 0) {
-        const emptyBox = document.createElement("div");
+        var emptyBox = document.createElement("div");
         emptyBox.className = "history-item";
-        const emptyText = document.createElement("div");
+        var emptyText = document.createElement("div");
         emptyText.className = "history-preview";
         emptyText.style.color = "#64748b";
         emptyText.textContent = "No saved study notes yet. Generated summaries are automatically cached here for offline review.";
@@ -168,18 +168,18 @@
         historyList.appendChild(emptyBox);
         return;
       }
-      saved.forEach((item) => {
-        const card = document.createElement("div");
+      saved.forEach(function(item) {
+        var card = document.createElement("div");
         card.className = "history-item";
-        const top = document.createElement("div");
+        var top = document.createElement("div");
         top.className = "history-top";
-        const left = document.createElement("span");
+        var left = document.createElement("span");
         left.textContent = item.modeLabel + " • " + item.time;
-        const right = document.createElement("span");
+        var right = document.createElement("span");
         right.textContent = item.latency + "s";
         top.appendChild(left);
         top.appendChild(right);
-        const body = document.createElement("div");
+        var body = document.createElement("div");
         body.className = "history-preview";
         body.textContent = item.output;
         card.appendChild(top);
