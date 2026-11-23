@@ -3,110 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NanoCloud Notes — Hybrid AI Study Workspace</title>
+  <title>NanoCloud Notes — Hybrid AI Workspace</title>
   <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
     body { margin: 0; padding: 16px; background: #090d16; color: #f8fafc; }
-    .container { max-width: 720px; margin: 0 auto; }
-    header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-    h1 { font-size: 1.45rem; margin: 0; color: #38bdf8; }
-    .subtitle { font-size: 0.82rem; color: #94a3b8; margin: 2px 0 0; }
-    .pills { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    .badge { padding: 5px 11px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: #1e293b; border: 1px solid #334155; }
-    .badge.local { background: #064e3b; border-color: #10b981; color: #a7f3d0; }
-    .badge.cloud { background: #1e3a8a; border-color: #3b82f6; color: #bfdbfe; }
-    .badge.online { background: #0f291e; border-color: #22c55e; color: #86efac; }
-    .badge.offline { background: #451a03; border-color: #f59e0b; color: #fde68a; }
-    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
-    .btn-ghost { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-    .char-count { font-size: 0.78rem; color: #94a3b8; }
-    textarea { width: 100%; height: 165px; padding: 14px; border-radius: 12px; border: 1px solid #334155; background: #111827; color: #f8fafc; font-size: 0.98rem; resize: vertical; line-height: 1.5; }
-    .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
-    @media (max-width: 540px) { .actions { grid-template-columns: 1fr; } }
-    button.main-btn { padding: 12px 10px; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
-    button.main-btn:disabled { opacity: 0.5; }
-    .btn-auto { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #ffffff; }
-    .btn-local { background: #10b981; color: #022c22; }
-    .btn-cloud { background: #2563eb; color: #ffffff; }
-    .card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 16px; margin-top: 10px; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .card-title { font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-    .output { white-space: pre-wrap; line-height: 1.6; font-size: 0.95rem; color: #e2e8f0; min-height: 90px; }
-    .telemetry { margin-top: 12px; padding-top: 10px; border-top: 1px solid #1f2937; font-size: 0.78rem; color: #94a3b8; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
-    .history-section { margin-top: 22px; }
-    .history-item { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; margin-top: 8px; }
-    .history-top { display: flex; justify-content: space-between; font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; }
-    .history-preview { font-size: 0.88rem; color: #cbd5e1; white-space: pre-wrap; max-height: 90px; overflow: hidden; }
+    .box { max-width: 680px; margin: 0 auto; }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    h1 { font-size: 1.35rem; margin: 0; color: #38bdf8; }
+    .pill { padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; background: #1e293b; border: 1px solid #334155; }
+    .local { background: #064e3b; border-color: #10b981; color: #a7f3d0; }
+    .cloud { background: #1e3a8a; border-color: #3b82f6; color: #bfdbfe; }
+    textarea { width: 100%; height: 150px; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #111827; color: #f8fafc; font-size: 0.95rem; }
+    .btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
+    @media (max-width: 520px) { .btns { grid-template-columns: 1fr; } }
+    button { padding: 11px; border: none; border-radius: 9px; font-weight: 700; font-size: 0.88rem; cursor: pointer; }
+    button:disabled { opacity: 0.5; }
+    .b-ghost { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 10px; font-size: 0.8rem; }
+    .b-auto { background: #0284c7; color: #fff; }
+    .b-local { background: #10b981; color: #022c22; }
+    .b-cloud { background: #2563eb; color: #fff; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 14px; margin-top: 10px; }
+    .out { white-space: pre-wrap; line-height: 1.55; font-size: 0.92rem; min-height: 80px; }
+    .meta { margin-top: 10px; padding-top: 8px; border-top: 1px solid #1f2937; font-size: 0.76rem; color: #94a3b8; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
+  <div class="box">
+    <div class="row">
+      <h1>NanoCloud Notes</h1>
       <div>
-        <h1>NanoCloud Notes</h1>
-        <p class="subtitle">Adaptive On-Device + Cloud AI Study Workspace</p>
+        <span id="net" class="pill">● Online</span>
+        <span id="badge" class="pill">Ready</span>
       </div>
-      <div class="pills">
-        <span id="netBadge" class="badge online">● Online</span>
-        <span id="modeBadge" class="badge">Hybrid AI Ready</span>
-      </div>
-    </header>
-
-    <div class="toolbar">
-      <button id="btnSample" class="btn-ghost">📋 Load Sample Lecture</button>
-      <span id="charCount" class="char-count">0 chars • Auto-routes short notes locally</span>
     </div>
 
-    <textarea id="noteInput" placeholder="Paste lecture notes, textbook excerpts, or research ideas here..."></textarea>
+    <div class="row">
+      <button id="sample" class="b-ghost" onclick="fillSample()">📋 Load Sample Lecture</button>
+      <span id="cnt" style="font-size:0.78rem;color:#94a3b8;">0 chars</span>
+    </div>
 
-    <div class="actions">
-      <button id="btnAuto" class="main-btn btn-auto">🧠 Smart Auto-Route</button>
-      <button id="btnQuick" class="main-btn btn-local">⚡ Quick Summary (Local)</button>
-      <button id="btnDeep" class="main-btn btn-cloud">☁️ Study Guide & Quiz (Cloud)</button>
+    <textarea id="inp" oninput="updCnt()" placeholder="Paste lecture notes here..."></textarea>
+
+    <div class="btns">
+      <button id="bAuto" class="b-auto" onclick="runAI('auto')">🧠 Smart Auto-Route</button>
+      <button id="bQuick" class="b-local" onclick="runAI('quick')">⚡ Quick Summary (Local)</button>
+      <button id="bDeep" class="b-cloud" onclick="runAI('deep')">☁️ Study Guide & Quiz (Cloud)</button>
     </div>
 
     <div class="card">
-      <div class="card-header">
-        <span class="card-title">AI Output</span>
-        <button id="btnCopy" class="btn-ghost">Copy Result</button>
-      </div>
-      <div class="output" id="outputBox">Tap "Load Sample Lecture" or paste your own notes, then choose Smart Auto-Route, Quick Summary, or Study Guide & Quiz.</div>
-      <div class="telemetry">
-        <span id="routeReason">Routing: Waiting for input</span>
-        <span id="metaInfo">Firebase AI Logic SDK</span>
-      </div>
+      <div class="out" id="out">Tap Load Sample Lecture, then tap Smart Auto-Route or Quick Summary.</div>
+      <div class="meta" id="meta">Firebase AI Logic Hybrid Inference SDK</div>
     </div>
 
-    <div class="history-section">
-      <div class="card-header">
-        <span class="card-title">💾 Offline Study Vault (Saved Locally)</span>
-        <button id="btnClearHistory" class="btn-ghost">Clear Vault</button>
+    <div class="card">
+      <div class="row" style="margin-bottom:6px;">
+        <strong style="font-size:0.8rem;color:#94a3b8;">💾 OFFLINE STUDY VAULT</strong>
+        <button class="b-ghost" onclick="clearVault()">Clear</button>
       </div>
-      <div id="historyList"></div>
+      <div class="out" id="vault" style="font-size:0.85rem;color:#cbd5e1;min-height:30px;"></div>
     </div>
   </div>
 
-  <script type="module">
+  <script>
     var NL = String.fromCharCode(10);
-    var outputBox = document.getElementById("outputBox");
-    var modeBadge = document.getElementById("modeBadge");
-    var netBadge = document.getElementById("netBadge");
-    var metaInfo = document.getElementById("metaInfo");
-    var routeReason = document.getElementById("routeReason");
-    var noteInput = document.getElementById("noteInput");
-    var charCount = document.getElementById("charCount");
-    var historyList = document.getElementById("historyList");
+    var SAMPLE = "Cellular Respiration & ATP Production" + NL + "Cellular respiration breaks down glucose to produce ATP, the cell's energy currency. It occurs in three stages: glycolysis in the cytoplasm (2 ATP, anaerobic), the Krebs cycle in the mitochondrial matrix, and oxidative phosphorylation along the inner mitochondrial membrane. With oxygen, aerobic respiration produces 30 to 32 ATP per glucose molecule, with oxygen acting as the final electron acceptor to form water.";
 
-    var btnAuto = document.getElementById("btnAuto");
-    var btnQuick = document.getElementById("btnQuick");
-    var btnDeep = document.getElementById("btnDeep");
-    var btnSample = document.getElementById("btnSample");
-    var btnCopy = document.getElementById("btnCopy");
-    var btnClearHistory = document.getElementById("btnClearHistory");
+    function updCnt() {
+      var n = document.getElementById("inp").value.trim().length;
+      document.getElementById("cnt").textContent = n + " chars";
+    }
+    function fillSample() {
+      document.getElementById("inp").value = SAMPLE;
+      updCnt();
+    }
+    function drawVault() {
+      var v = JSON.parse(localStorage.getItem("nc_v") || "[]");
+      document.getElementById("vault").textContent = v.length ? v.join(NL + "---" + NL) : "No saved notes yet.";
+    }
+    function clearVault() {
+      localStorage.removeItem("nc_v");
+      drawVault();
+    }
+    drawVault();
 
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = "2ED8D27A-02E8-4050-A774-BBF0F2D55AA2";
-
-    var firebaseConfig = {
+    var cfg = {
       apiKey: "AIzaSyAh6nklRujVWgXgaKjaHWLBPju8481E9So",
       authDomain: "://firebaseapp.com",
       projectId: "nanocloud-notes",
@@ -116,72 +97,66 @@
       measurementId: "G-YYTGF9VCSR"
     };
 
-    var SAMPLE_LECTURE = "Cellular Respiration & ATP Production" + NL + "Cellular respiration is the metabolic pathway that breaks down glucose to produce adenosine triphosphate (ATP), the primary energy currency of cells. It occurs in three main stages: glycolysis in the cytoplasm, the Krebs cycle (citric acid cycle) in the mitochondrial matrix, and oxidative phosphorylation along the inner mitochondrial membrane. While glycolysis can occur anaerobically and yields a net gain of 2 ATP molecules, the presence of oxygen allows eukaryotic cells to complete aerobic respiration, generating approximately 30 to 32 ATP molecules per glucose molecule. Oxygen acts as the final electron acceptor in the electron transport chain, combining with hydrogen ions to form water as a byproduct.";
+    var sdkBase = ["https:/", "://gstatic.com", "firebasejs", "13.4.0", ""].join("/");
+    var aiRef = null;
+    var genModelFn = null;
 
-    function updateNetworkUI() {
-      if (navigator.onLine) {
-        netBadge.textContent = "● Online";
-        netBadge.className = "badge online";
-      } else {
-        netBadge.textContent = "● Offline (Local-First)";
-        netBadge.className = "badge offline";
-      }
-    }
-    window.addEventListener("online", updateNetworkUI);
-    window.addEventListener("offline", updateNetworkUI);
-    updateNetworkUI();
+    async function runAI(modeType) {
+      var out = document.getElementById("out");
+      var badge = document.getElementById("badge");
+      var meta = document.getElementById("meta");
+      var text = document.getElementById("inp").value.trim();
 
-    function updateCharHint() {
-      var len = noteInput.value.trim().length;
-      var target = "Auto-routes short notes locally";
-      if (Boolean(len)) {
-        target = Math.floor(len / 350) === 0 ? "Short note • Auto-routes On-Device" : "Dense note • Auto-routes Cloud";
-      }
-      charCount.textContent = len + " chars • " + target;
-    }
-    noteInput.addEventListener("input", updateCharHint);
-
-    btnSample.addEventListener("click", function() {
-      noteInput.value = SAMPLE_LECTURE;
-      updateCharHint();
-    });
-
-    btnCopy.addEventListener("click", function() {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(outputBox.textContent);
-        btnCopy.textContent = "Copied!";
-        setTimeout(function() { btnCopy.textContent = "Copy Result"; }, 1500);
-      }
-    });
-
-    function renderHistory() {
-      historyList.textContent = "";
-      var saved = JSON.parse(localStorage.getItem("nanocloud_vault") || "[]");
-      if (saved.length === 0) {
-        var emptyBox = document.createElement("div");
-        emptyBox.className = "history-item";
-        var emptyText = document.createElement("div");
-        emptyText.className = "history-preview";
-        emptyText.style.color = "#64748b";
-        emptyText.textContent = "No saved study notes yet. Generated summaries are automatically cached here for offline review.";
-        emptyBox.appendChild(emptyText);
-        historyList.appendChild(emptyBox);
+      if (!text) {
+        out.textContent = "Tap Load Sample Lecture first!";
         return;
       }
-      saved.forEach(function(item) {
-        var card = document.createElement("div");
-        card.className = "history-item";
-        var top = document.createElement("div");
-        top.className = "history-top";
-        var left = document.createElement("span");
-        left.textContent = item.modeLabel + " • " + item.time;
-        var right = document.createElement("span");
-        right.textContent = item.latency + "s";
-        top.appendChild(left);
-        top.appendChild(right);
-        var body = document.createElement("div");
-        body.className = "history-preview";
-        body.textContent = item.output;
-        card.appendChild(top);
-        card.appendChild(body);
-    
+
+      var useLocal = modeType === "quick" || (modeType === "auto" && (!navigator.onLine || text.length < 350));
+      out.textContent = "Running " + (useLocal ? "On-Device / Hybrid" : "Cloud") + " AI...";
+
+      try {
+        if (!aiRef) {
+          var m1 = await import(sdkBase + "firebase-app.js");
+          var m2 = await import(sdkBase + "firebase-app-check.js");
+          var m3 = await import(sdkBase + "firebase-ai.js");
+          var app = m1.initializeApp(cfg);
+          m2.initializeAppCheck(app, {
+            provider: new m2.ReCaptchaEnterpriseProvider("6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"),
+            isTokenAutoRefreshEnabled: true
+          });
+          aiRef = m3.getAI(app, { backend: new m3.GoogleAIBackend() });
+          genModelFn = m3.getGenerativeModel;
+        }
+
+        var t0 = performance.now();
+        var model = genModelFn(aiRef, {
+          model: "gemini-2.5-flash",
+          mode: useLocal ? "prefer_on_device" : "prefer_in_cloud"
+        });
+
+        var prompt = useLocal
+          ? "Summarize into 3 short bullets and 3 key terms:" + NL + text
+          : "Create a study guide with core concepts and 3 quiz questions with answers:" + NL + text;
+
+        var res = await model.generateContent(prompt);
+        var ans = res.response.text();
+        var sec = ((performance.now() - t0) / 1000).toFixed(2);
+        var src = res.response.inferenceSource || (useLocal ? "ON_DEVICE / HYBRID" : "IN_CLOUD");
+
+        badge.textContent = String(src).indexOf("DEVICE") !== -1 ? "⚡ On-Device" : "☁️ Cloud";
+        badge.className = "pill " + (String(src).indexOf("DEVICE") !== -1 ? "local" : "cloud");
+        out.textContent = ans;
+        meta.textContent = "Mode: " + modeType.toUpperCase() + " • Source: " + src + " • " + sec + "s";
+
+        var v = JSON.parse(localStorage.getItem("nc_v") || "[]");
+        v.unshift("[" + modeType.toUpperCase() + " • " + sec + "s]" + NL + ans);
+        localStorage.setItem("nc_v", JSON.stringify(v.slice(0, 6)));
+        drawVault();
+      } catch (e) {
+        out.textContent = "Error: " + e.message;
+      }
+    }
+  </script>
+</body>
+</html>
